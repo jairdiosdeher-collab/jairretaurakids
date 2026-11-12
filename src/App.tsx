@@ -24,6 +24,7 @@ import { ModeSelectorModal } from './components/modals/ModeSelectorModal';
 import { MissionsListModal } from './components/modals/MissionsListModal';
 import { CharacterModal } from './components/modals/CharacterModal';
 import { ZoneModal } from './components/modals/ZoneModal';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 export default function App() {
   // Local storage persisted state
@@ -178,13 +179,19 @@ export default function App() {
       {/* 2. Main Stage (3D World Canvas or 2D Illustrated Map) */}
       <main className="relative flex-1 w-full h-full overflow-hidden">
         {viewMode === '3d' ? (
-          <WorldCanvas
-            activeZoneId={activeZoneId}
-            onSelectZone={handleSelectZone}
-            onSelectCharacter={handleSelectCharacter}
-            onOpenMission={handleOpenMission}
-            completedMissions={completedMissions}
-          />
+          <ErrorBoundary
+            fallbackMessage="Se detectó una incompatibilidad con el acelerador 3D de este navegador. Puedes continuar sin problemas en el Mapa Ilustrado 2D."
+            onFallbackTo2D={() => setViewMode('illustrated_map')}
+          >
+            <WorldCanvas
+              activeZoneId={activeZoneId}
+              onSelectZone={handleSelectZone}
+              onSelectCharacter={handleSelectCharacter}
+              onOpenMission={handleOpenMission}
+              completedMissions={completedMissions}
+              onWebGLError={() => setViewMode('illustrated_map')}
+            />
+          </ErrorBoundary>
         ) : (
           <IllustratedMap
             activeZoneId={activeZoneId}

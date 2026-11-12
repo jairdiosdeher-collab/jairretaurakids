@@ -11,6 +11,7 @@ interface WorldCanvasProps {
   onSelectCharacter?: (characterId: CharacterId) => void;
   onOpenMission?: (missionId: number) => void;
   completedMissions: number[];
+  onWebGLError?: () => void;
 }
 
 export const WorldCanvas: React.FC<WorldCanvasProps> = ({
@@ -18,12 +19,14 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
   onSelectZone,
   onSelectCharacter,
   onOpenMission,
-  completedMissions
+  completedMissions,
+  onWebGLError
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const [hoveredZone, setHoveredZone] = useState<ZoneId | null>(null);
   const [hoveredCharacter, setHoveredCharacter] = useState<CharacterId | null>(null);
   const [loading, setLoading] = useState(true);
+  const [webglError, setWebglError] = useState<string | null>(null);
 
   // Store mutable refs for animation loop
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -104,21 +107,33 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     scene.background = new THREE.Color(0xdbeafe); // Soft sky blue
     scene.fog = new THREE.FogExp2(0xdbeafe, 0.015);
 
-    // 3. Camera (Isometric Perspective)
-    const aspect = container.clientWidth / container.clientHeight;
+    // 3. Camera with Container Dimension Validation
+    const width = container.clientWidth || window.innerWidth || 800;
+    const height = container.clientHeight || Math.max(window.innerHeight - 80, 500);
+    const aspect = Math.max(0.1, width / Math.max(1, height));
     const camera = new THREE.PerspectiveCamera(40, aspect, 0.5, 180);
     camera.position.set(28, 24, 28);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
-    // 4. Renderer
-    const renderer = new THREE.WebGLRenderer({
-      antialias: !isSoftwareGl,
-      powerPreference: 'high-performance',
-      alpha: false
-    });
+    // 4. Renderer with try-catch and WebGL safety
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: !isSoftwareGl,
+        powerPreference: 'high-performance',
+        alpha: false
+      });
+    } catch (err) {
+      console.warn('JAIRRESTAURA - WebGL no disponible en este dispositivo:', err);
+      setWebglError('El acelerador gráfico 3D no está disponible o fue bloqueado en este dispositivo.');
+      setLoading(false);
+      onWebGLError?.();
+      return;
+    }
+
     rendererRef.current = renderer;
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setSize(width, height);
     renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -126,7 +141,22 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     renderer.shadowMap.enabled = !isSoftwareGl;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+    // Clean up any stale canvas elements to prevent zombie contexts on re-mount
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
     container.appendChild(renderer.domElement);
+
+    // Context loss safety
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      cancelAnimationFrame(frameId);
+      clearTimeout(frameId);
+      console.warn('JAIRRESTAURA - Contexto WebGL perdido.');
+      setWebglError('El contexto 3D fue interrumpido por el navegador.');
+      onWebGLError?.();
+    };
+    renderer.domElement.addEventListener('webglcontextlost', handleContextLost, false);
 
     // 5. Lighting Rig (Warm sun, Cool sky fill, Rim light)
     const sunLight = new THREE.DirectionalLight(0xfffaed, 2.2);
@@ -790,9 +820,9 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     // 7. Window Resize Handler
     const handleResize = () => {
       if (!container || !rendererRef.current || !cameraRef.current) return;
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      cameraRef.current.aspect = w / h;
+      const w = container.clientWidth || window.innerWidth || 800;
+      const h = container.clientHeight || Math.max(window.innerHeight - 80, 500);
+      cameraRef.current.aspect = Math.max(0.1, w / Math.max(1, h));
       cameraRef.current.updateProjectionMatrix();
       rendererRef.current.setSize(w, h);
     };
@@ -806,6 +836,14 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       clearTimeout(frameId);
       window.removeEventListener('resize', handleResize);
 
+      if (renderer) {
+        renderer.domElement.removeEventListener('webglcontextlost', handleContextLost);
+        if (renderer.domElement.parentElement) {
+          renderer.domElement.parentElement.removeChild(renderer.domElement);
+        }
+        renderer.dispose();
+      }
+
       // Dispose ThreeJS resources
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh) {
@@ -818,10 +856,9 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
         }
       });
 
-      if (renderer.domElement.parentElement) {
-        renderer.domElement.parentElement.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
+      rendererRef.current = null;
+      sceneRef.current = null;
+      cameraRef.current = null;
     };
   }, []);
 
@@ -974,6 +1011,28 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
             <div className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">Personaje Amigo</div>
             <div className="text-base font-bold text-white">{CHARACTERS[hoveredCharacter].name}</div>
             <div className="text-xs text-slate-300 mt-0.5">{CHARACTERS[hoveredCharacter].role}</div>
+          </div>
+        </div>
+      )}
+
+      {/* WebGL Error / Fallback Card */}
+      {webglError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/85 backdrop-blur-md text-white p-6 z-30">
+          <div className="max-w-md w-full bg-slate-800 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 text-xl font-bold">
+              !
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">Modo 3D no compatible</h3>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">{webglError}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onWebGLError?.()}
+              className="w-full py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-md transition-colors"
+            >
+              Continuar en el Mapa Ilustrado 2D
+            </button>
           </div>
         </div>
       )}

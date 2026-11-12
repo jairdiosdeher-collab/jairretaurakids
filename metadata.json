@@ -1,0 +1,6 @@
+{
+  "name": "JAIRRESTAURA – El Mundo de las Soluciones",
+  "description": "Videojuego educativo interactivo en 3D para aprender habilidades para la vida mediante exploración, historias visuales, personajes y toma de decisiones.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

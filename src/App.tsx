@@ -25,6 +25,7 @@ import { MissionsListModal } from './components/modals/MissionsListModal';
 import { CharacterModal } from './components/modals/CharacterModal';
 import { ZoneModal } from './components/modals/ZoneModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { MathHub } from './components/math/MathHub';
 
 export default function App() {
   // Local storage persisted state
@@ -84,6 +85,7 @@ export default function App() {
 
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'3d' | 'illustrated_map'>('3d');
+  const [isMathHubOpen, setIsMathHubOpen] = useState(false);
 
   // Exploration & Modal State
   const [activeZoneId, setActiveZoneId] = useState<ZoneId | null>(null);
@@ -176,6 +178,8 @@ export default function App() {
         onToggleViewMode={() => setViewMode(viewMode === '3d' ? 'illustrated_map' : '3d')}
       />
 
+      <button onClick={() => setIsMathHubOpen(true)} className="fixed right-3 top-20 z-40 rounded-full border border-white/30 bg-indigo-700 px-4 py-3 text-sm font-extrabold text-white shadow-xl transition hover:scale-105 hover:bg-indigo-800 sm:right-6" aria-label="Abrir JAIR MATH KIDS">🧮 JAIR MATH KIDS</button>
+
       {/* 2. Main Stage (3D World Canvas or 2D Illustrated Map) */}
       <main className="relative flex-1 w-full h-full overflow-hidden">
         {viewMode === '3d' ? (
@@ -223,6 +227,9 @@ export default function App() {
           onExit={() => setActiveMissionId(null)}
         />
       )}
+
+      {/* Módulo JAIR MATH KIDS */}
+      {isMathHubOpen && <MathHub onClose={() => setIsMathHubOpen(false)} />}
 
       {/* 5. Modals */}
       {isBadgesModalOpen && (

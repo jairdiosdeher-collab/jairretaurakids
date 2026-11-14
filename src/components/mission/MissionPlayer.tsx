@@ -25,6 +25,7 @@ interface MissionPlayerProps {
   mission: Mission;
   currentMode: GameMode;
   onCompleteMission: (missionId: number, badgeId: string, reflectionNote: string) => void;
+  onPracticeCompleted?: (missionId: number) => void;
   onExit: () => void;
 }
 
@@ -32,6 +33,7 @@ export const MissionPlayer: React.FC<MissionPlayerProps> = ({
   mission,
   currentMode,
   onCompleteMission,
+  onPracticeCompleted,
   onExit
 }) => {
   const [currentStation, setCurrentStation] = useState<number>(1);
@@ -65,6 +67,12 @@ export const MissionPlayer: React.FC<MissionPlayerProps> = ({
     setMatchedPairIds([]);
     setActivityDone(false);
   }, [currentStation, station5Data]);
+
+  useEffect(() => {
+    if (activityDone && onPracticeCompleted) {
+      onPracticeCompleted(mission.id);
+    }
+  }, [activityDone, mission.id, onPracticeCompleted]);
 
   // Audio narration handler
   const handleToggleNarration = (text: string) => {
@@ -181,7 +189,7 @@ export const MissionPlayer: React.FC<MissionPlayerProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/75 flex items-center justify-center p-3 sm:p-6">
       <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Top Header Bar */}
         <div className="bg-gradient-to-r from-teal-700 via-teal-800 to-slate-900 text-white px-6 py-4 flex items-center justify-between shrink-0">
@@ -861,7 +869,7 @@ export const MissionPlayer: React.FC<MissionPlayerProps> = ({
 
         {/* Badge Unlocked Celebration Overlay */}
         {isCompleted && (
-          <div className="absolute inset-0 z-30 bg-slate-900/85 backdrop-blur-md flex items-center justify-center p-6 text-center text-white animate-in zoom-in-95 duration-200">
+          <div className="absolute inset-0 z-30 bg-slate-900/95 flex items-center justify-center p-6 text-center text-white animate-in zoom-in-95 duration-200">
             <div className="max-w-md space-y-5">
               <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-tr from-amber-400 to-yellow-200 text-slate-900 flex items-center justify-center shadow-2xl p-2 ring-4 ring-amber-400/30">
                 <Award className="w-14 h-14 text-amber-900" />

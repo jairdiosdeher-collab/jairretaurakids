@@ -25,7 +25,7 @@ export const ZoneModal: React.FC<ZoneModalProps> = ({
   const zoneMissions = MISSIONS.filter((m) => m.zoneId === zoneId);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/75 flex items-center justify-center p-3 sm:p-6">
       <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div

@@ -1,4 +1,6 @@
 import { Character, CharacterId } from '../types/game';
+import characterTrioImg from '../assets/images/character_trio_nico_luna_samuel_1794499387200.jpg';
+import characterGuiaImg from '../assets/images/character_guia_mentor_1794499387818.jpg';
 
 export const CHARACTERS: Record<CharacterId, Character> = {
   nico: {
@@ -9,7 +11,7 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     description: 'Siempre listo para descubrir la verdad de las situaciones, observar detalles que otros pasan por alto y hacer preguntas con respeto.',
     color: '#0284c7', // Sky Blue
     accentColor: '#38bdf8',
-    avatarUrl: '/src/assets/images/character_trio_nico_luna_samuel_1794499387200.jpg',
+    avatarUrl: characterTrioImg,
     personality: ['Observador', 'Inquieto positivamente', 'Valora la verdad', 'Aprende de los errores']
   },
   luna: {
@@ -20,7 +22,7 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     description: 'Transforma las emociones complejas en dibujos, metáforas y soluciones originales. Ayuda a reconocer lo que guardamos en el corazón.',
     color: '#8b5cf6', // Violet
     accentColor: '#c084fc',
-    avatarUrl: '/src/assets/images/character_trio_nico_luna_samuel_1794499387200.jpg',
+    avatarUrl: characterTrioImg,
     personality: ['Intuitiva', 'Poética', 'Sensible', 'Pensamiento lateral']
   },
   samuel: {
@@ -31,7 +33,7 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     description: 'Le apasiona que nadie se quede fuera. Sabe que las mejores victorias son las que se alcanzan colaborando hombro a hombro.',
     color: '#10b981', // Emerald Green
     accentColor: '#34d399',
-    avatarUrl: '/src/assets/images/character_trio_nico_luna_samuel_1794499387200.jpg',
+    avatarUrl: characterTrioImg,
     personality: ['Generoso', 'Práctico', 'Mediador', 'Protector de la equidad']
   },
   sofia: {
@@ -42,7 +44,7 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     description: 'Sabe acoger a los demás sin juzgar. Especialista en tender puentes cuando las palabras se quiebran o hay malentendidos.',
     color: '#f59e0b', // Amber / Sun Yellow
     accentColor: '#fbbf24',
-    avatarUrl: '/src/assets/images/character_trio_nico_luna_samuel_1794499387200.jpg',
+    avatarUrl: characterTrioImg,
     personality: ['Cálida', 'Paciente', 'Escucha activa', 'Conciliadora']
   },
   guia: {
@@ -53,7 +55,7 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     description: 'Un adulto de confianza que no impone castigos ni juzga; abre espacios seguros donde cada persona encuentra sus propias respuestas constructivas.',
     color: '#0d9488', // Teal
     accentColor: '#2dd4bf',
-    avatarUrl: '/src/assets/images/character_guia_mentor_1794499387818.jpg',
+    avatarUrl: characterGuiaImg,
     personality: ['Sereno', 'Facilitador del diálogo', 'Sin prejuicios', 'Fomenta la autonomía']
   }
 };

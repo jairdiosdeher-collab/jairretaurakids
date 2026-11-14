@@ -160,3 +160,111 @@ export interface UserProgress {
   activeMissionId: number | null;
   viewMode: '3d' | 'illustrated_map';
 }
+
+// --- MI REFLEXIÓN DIARIA ---
+
+export type DailyEmotionId =
+  | 'alegria'
+  | 'calma'
+  | 'curiosidad'
+  | 'orgullo'
+  | 'duda'
+  | 'tristeza'
+  | 'enojo'
+  | 'cansancio';
+
+export interface DailyReflectionEntry {
+  id: string;
+  dateISO: string; // YYYY-MM-DD
+  createdAt: string;
+  updatedAt: string;
+  emotion: DailyEmotionId;
+  learnedToday: string;
+  extraNote?: string;
+}
+
+// --- MATEMÁTICAS INTELIGENTES ---
+
+export type MathTopicId =
+  | 'sumas'
+  | 'restas'
+  | 'multiplicaciones'
+  | 'divisiones'
+  | 'fracciones'
+  | 'decimales'
+  | 'geometria'
+  | 'medidas'
+  | 'problemas'
+  | 'retos';
+
+export type MathLevel = 1 | 2 | 3;
+
+export type MathVisualDiagram =
+  | {
+      kind: 'fraction_bar';
+      numerator: number;
+      denominator: number;
+      label?: string;
+    }
+  | {
+      kind: 'geometry_shape';
+      shape: 'square' | 'rectangle' | 'triangle' | 'circle';
+      dimensions: string[];
+      highlight?: 'perimeter' | 'area' | 'sides';
+    }
+  | {
+      kind: 'ruler_measure';
+      startCm: number;
+      endCm: number;
+      unit: string;
+    }
+  | {
+      kind: 'number_groups';
+      groups: number;
+      perGroup: number;
+      operation: 'add' | 'multiply' | 'divide';
+    };
+
+export interface MathExercise {
+  id: string;
+  topicId: MathTopicId;
+  level: MathLevel;
+  title: string;
+  conceptExplanation: string;
+  workedExample: {
+    problem: string;
+    steps: string[];
+    result: string;
+  };
+  question: string;
+  hint: string;
+  answerType: 'number' | 'choice' | 'text';
+  choices?: string[];
+  correctAnswer: string;
+  acceptedAnswers?: string[];
+  unitLabel?: string;
+  visualDiagram?: MathVisualDiagram;
+  stepByStepCorrection: string[];
+  positiveFeedback: string;
+  isGenerated?: boolean;
+}
+
+export interface MathTopicMeta {
+  id: MathTopicId;
+  name: string;
+  shortDescription: string;
+  color: string;
+  accentBg: string;
+  iconName: string;
+}
+
+export interface MathTopicProgress {
+  attempts: number;
+  correct: number;
+  unlockedLevel: MathLevel;
+  completedIds: string[];
+  lastPracticedAt?: string;
+}
+
+export type MathProgressState = Record<MathTopicId, MathTopicProgress>;
+

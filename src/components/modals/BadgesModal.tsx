@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MISSIONS } from '../../data/missions';
 import { audioService } from '../../services/audioService';
+import badgeEscuchaImg from '../../assets/images/badge_escucha_activa_insignia_1794499386973.jpg';
 import { Award, Lock, CheckCircle2, X } from 'lucide-react';
 
 interface BadgesModalProps {
@@ -14,8 +15,10 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
   onClose,
   onSelectMission
 }) => {
+  const [badgeImgFailed, setBadgeImgFailed] = useState(false);
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/75 flex items-center justify-center p-3 sm:p-6">
       <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white px-6 py-5 flex items-center justify-between shrink-0">
@@ -33,6 +36,7 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Cerrar colección de insignias"
             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
           >
             <X className="w-5 h-5" />
@@ -42,9 +46,9 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
         {/* Progress Summary Strip */}
         <div className="bg-amber-50/70 border-b border-amber-200/60 px-6 py-3 flex items-center justify-between text-xs text-amber-900 shrink-0">
           <div className="font-medium">
-            Progreso de Colección: <span className="font-bold">{earnedBadges.length} de 12 insignias</span>
+            Progreso de Colección: <span className="font-bold tabular-nums">{earnedBadges.length} de 12 insignias</span>
           </div>
-          <div className="text-[11px] text-amber-800">
+          <div className="text-[11px] text-amber-800 hidden sm:block">
             Los reconocimientos son celebraciones positivas del aprendizaje, sin prisa ni competencia.
           </div>
         </div>
@@ -53,6 +57,7 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {MISSIONS.map((m) => {
             const isEarned = earnedBadges.includes(m.badge.id);
+            const showCustomArt = isEarned && m.badge.id === 'badge_escucha' && !badgeImgFailed;
 
             return (
               <div
@@ -60,20 +65,30 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
                 className={`p-5 rounded-2xl border flex flex-col justify-between transition-all ${
                   isEarned
                     ? 'bg-gradient-to-br from-amber-50/40 via-white to-yellow-50/30 border-amber-300 shadow-sm'
-                    : 'bg-slate-50/70 border-slate-200 opacity-70'
+                    : 'bg-slate-50/70 border-slate-200 opacity-75'
                 }`}
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
-                    <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${
-                        isEarned
-                          ? 'bg-gradient-to-tr from-amber-400 to-yellow-300 text-amber-950 ring-2 ring-amber-300/60'
-                          : 'bg-slate-200 text-slate-400'
-                      }`}
-                    >
-                      {isEarned ? <Award className="w-7 h-7" /> : <Lock className="w-6 h-6" />}
-                    </div>
+                    {showCustomArt ? (
+                      <img
+                        src={badgeEscuchaImg}
+                        alt={`Insignia ${m.badge.title}`}
+                        referrerPolicy="no-referrer"
+                        onError={() => setBadgeImgFailed(true)}
+                        className="w-12 h-12 rounded-2xl object-cover shadow-sm ring-2 ring-amber-300/60"
+                      />
+                    ) : (
+                      <div
+                        className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${
+                          isEarned
+                            ? 'bg-gradient-to-tr from-amber-400 to-yellow-300 text-amber-950 ring-2 ring-amber-300/60'
+                            : 'bg-slate-200 text-slate-400'
+                        }`}
+                      >
+                        {isEarned ? <Award className="w-7 h-7" /> : <Lock className="w-6 h-6" />}
+                      </div>
+                    )}
                     {isEarned ? (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                         <CheckCircle2 className="w-3.5 h-3.5" />

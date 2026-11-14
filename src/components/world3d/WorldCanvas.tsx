@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GAME_ZONES } from '../../data/zones';
 import { CHARACTERS } from '../../data/characters';
 import { ZoneId, CharacterId } from '../../types/game';
@@ -158,6 +159,21 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
     };
     renderer.domElement.addEventListener('webglcontextlost', handleContextLost, false);
 
+    // Environment lighting for richer PBR materials on GPU
+    let envTexture: THREE.Texture | null = null;
+    if (!isSoftwareGl) {
+      try {
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        const roomEnv = new RoomEnvironment();
+        envTexture = pmremGenerator.fromScene(roomEnv, 0.04).texture;
+        scene.environment = envTexture;
+        roomEnv.dispose();
+        pmremGenerator.dispose();
+      } catch (envErr) {
+        console.warn('JAIRRESTAURA - RoomEnvironment omitido:', envErr);
+      }
+    }
+
     // 5. Lighting Rig (Warm sun, Cool sky fill, Rim light)
     const sunLight = new THREE.DirectionalLight(0xfffaed, 2.2);
     sunLight.position.set(35, 45, 25);
@@ -248,14 +264,6 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       new THREE.Vector3(14, 0.03, 14),
       new THREE.Vector3(26, 0.03, 26)
     ]);
-    const riverPoints = riverCurve.getPoints(40);
-    const riverShape = new THREE.Shape();
-    riverShape.moveTo(-2.2, 0);
-    riverShape.lineTo(2.2, 0);
-    riverShape.lineTo(2.2, -0.2);
-    riverShape.lineTo(-2.2, -0.2);
-    riverShape.closePath();
-
     const riverGeo = new THREE.TubeGeometry(riverCurve, 40, 2.4, 8, false);
     const riverMat = new THREE.MeshStandardMaterial({
       color: 0x38bdf8,
@@ -836,6 +844,11 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       clearTimeout(frameId);
       window.removeEventListener('resize', handleResize);
 
+      if (envTexture) {
+        envTexture.dispose();
+        scene.environment = null;
+      }
+
       if (renderer) {
         renderer.domElement.removeEventListener('webglcontextlost', handleContextLost);
         if (renderer.domElement.parentElement) {
@@ -979,8 +992,14 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={() => {
+          isPointerDownRef.current = false;
+        }}
+        onPointerLeave={() => {
+          isPointerDownRef.current = false;
+        }}
         onWheel={handleWheel}
-        className="w-full h-full cursor-grab active:cursor-grabbing"
+        className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
       />
 
       {/* Loading state indicator */}
@@ -996,7 +1015,7 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       {/* Floating Hover Cards for Zones */}
       {hoveredZone && (
         <div className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-none z-20">
-          <div className="bg-slate-900/90 text-white px-5 py-2.5 rounded-xl shadow-lg border border-slate-700 backdrop-blur-sm text-center animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-slate-900/95 text-white px-5 py-2.5 rounded-xl shadow-lg border border-slate-700 text-center animate-in fade-in zoom-in-95 duration-150">
             <div className="text-xs uppercase tracking-wider text-amber-400 font-semibold">Zona Explorable</div>
             <div className="text-base font-bold text-white">{GAME_ZONES[hoveredZone].name}</div>
             <div className="text-xs text-slate-300 mt-0.5">{GAME_ZONES[hoveredZone].tagline}</div>
@@ -1007,7 +1026,7 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
       {/* Floating Hover Cards for Characters */}
       {hoveredCharacter && !hoveredZone && (
         <div className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-none z-20">
-          <div className="bg-slate-900/90 text-white px-5 py-2.5 rounded-xl shadow-lg border border-slate-700 backdrop-blur-sm text-center animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-slate-900/95 text-white px-5 py-2.5 rounded-xl shadow-lg border border-slate-700 text-center animate-in fade-in zoom-in-95 duration-150">
             <div className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">Personaje Amigo</div>
             <div className="text-base font-bold text-white">{CHARACTERS[hoveredCharacter].name}</div>
             <div className="text-xs text-slate-300 mt-0.5">{CHARACTERS[hoveredCharacter].role}</div>
@@ -1017,7 +1036,7 @@ export const WorldCanvas: React.FC<WorldCanvasProps> = ({
 
       {/* WebGL Error / Fallback Card */}
       {webglError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/85 backdrop-blur-md text-white p-6 z-30">
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/95 text-white p-6 z-30">
           <div className="max-w-md w-full bg-slate-800 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 text-xl font-bold">
               !

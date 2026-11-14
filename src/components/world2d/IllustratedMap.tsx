@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GAME_ZONES, ALL_ZONE_IDS } from '../../data/zones';
 import { CHARACTERS } from '../../data/characters';
 import { MISSIONS } from '../../data/missions';
-import { ZoneId, CharacterId } from '../../types/game';
+import { ZoneId } from '../../types/game';
 import { audioService } from '../../services/audioService';
+import heroWorldImg from '../../assets/images/hero_world_solutions_cover_1794499386266.jpg';
+import mathStudioImg from '../../assets/images/math_smart_studio_1794688256069.jpg';
+import dailyJournalImg from '../../assets/images/daily_reflection_journal_1794688256504.jpg';
+import progressAtlasImg from '../../assets/images/educational_progress_atlas_1794688257252.jpg';
 import {
   Trees,
   GraduationCap,
@@ -13,13 +17,19 @@ import {
   Users,
   Compass,
   CheckCircle2,
-  Play
+  Play,
+  Calculator,
+  BookHeart,
+  TrendingUp
 } from 'lucide-react';
 
 interface IllustratedMapProps {
   activeZoneId: ZoneId | null;
   onSelectZone: (zoneId: ZoneId) => void;
   onOpenMission: (missionId: number) => void;
+  onOpenMathStudio?: () => void;
+  onOpenDailyReflection?: () => void;
+  onOpenProgressDashboard?: () => void;
   completedMissions: number[];
 }
 
@@ -27,8 +37,14 @@ export const IllustratedMap: React.FC<IllustratedMapProps> = ({
   activeZoneId,
   onSelectZone,
   onOpenMission,
+  onOpenMathStudio,
+  onOpenDailyReflection,
+  onOpenProgressDashboard,
   completedMissions
 }) => {
+  const [heroImgFailed, setHeroImgFailed] = useState(false);
+  const [failedCards, setFailedCards] = useState<Record<string, boolean>>({});
+
   const getZoneIcon = (iconName: string) => {
     switch (iconName) {
       case 'Trees':
@@ -51,33 +67,162 @@ export const IllustratedMap: React.FC<IllustratedMapProps> = ({
   };
 
   return (
-    <div className="w-full h-full min-h-[600px] overflow-y-auto p-4 sm:p-8 bg-gradient-to-b from-sky-50 via-emerald-50/40 to-amber-50/30">
+    <div className="w-full h-full min-h-[500px] overflow-y-auto p-4 sm:p-8 pb-28 bg-gradient-to-b from-sky-50 via-emerald-50/40 to-amber-50/30">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header Banner */}
-        <div className="relative rounded-2xl overflow-hidden bg-white border border-slate-200/80 p-6 sm:p-8 shadow-sm">
-          <div className="flex flex-col md:flex-row items-center gap-6 justify-between">
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-teal-700">
-                Mapa Ilustrado de Navegación Ligera
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-                El Mundo de las Soluciones
-              </h2>
-              <p className="text-sm text-slate-600 mt-2 max-w-xl">
-                Explora los 7 escenarios de convivencia, conoce a sus personajes y vive las 12 misiones
-                educativas para aprender a vivir, comprender y construir juntos.
-              </p>
-            </div>
-            <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl shrink-0">
-              <div className="text-center">
-                <div className="text-2xl font-black text-teal-600 tabular-nums">
-                  {completedMissions.length} <span className="text-sm text-slate-400 font-normal">/ 12</span>
+        <div className="relative rounded-2xl overflow-hidden bg-white border border-slate-200/80 shadow-sm">
+          {!heroImgFailed && (
+            <div className="relative h-40 sm:h-52 w-full overflow-hidden">
+              <img
+                src={heroWorldImg}
+                alt="Vista panorámica de El Mundo de las Soluciones"
+                referrerPolicy="no-referrer"
+                onError={() => setHeroImgFailed(true)}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/75 via-slate-900/20 to-transparent" />
+              <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between gap-4 text-white">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-teal-300">
+                    Mapa Ilustrado de Navegación Ligera
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-0.5">
+                    El Mundo de las Soluciones
+                  </h2>
                 </div>
-                <div className="text-xs text-slate-500 font-medium">Misiones Completadas</div>
+                <div className="hidden sm:block bg-slate-900/85 border border-white/15 px-4 py-2 rounded-xl text-center shrink-0">
+                  <div className="text-xl font-black text-teal-300 tabular-nums">
+                    {completedMissions.length} <span className="text-xs text-slate-300 font-normal">/ 12</span>
+                  </div>
+                  <div className="text-[11px] text-slate-200 font-medium">Misiones</div>
+                </div>
               </div>
             </div>
+          )}
+          <div className="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <p className="text-sm text-slate-600 max-w-2xl">
+              Explora los 7 escenarios de convivencia, conoce a sus personajes y vive las 12 misiones
+              educativas para aprender a vivir, comprender y construir juntos.
+            </p>
+            {heroImgFailed && (
+              <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 px-5 py-3 rounded-xl shrink-0">
+                <div className="text-center">
+                  <div className="text-2xl font-black text-teal-600 tabular-nums">
+                    {completedMissions.length} <span className="text-sm text-slate-400 font-normal">/ 12</span>
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium">Misiones Completadas</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Educational Modules Quick Launch */}
+        {(onOpenMathStudio || onOpenDailyReflection || onOpenProgressDashboard) && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {onOpenMathStudio && (
+              <button
+                type="button"
+                onClick={() => {
+                  audioService.playClick();
+                  onOpenMathStudio();
+                }}
+                className="group text-left rounded-2xl bg-white border border-slate-200 hover:border-sky-400 shadow-xs hover:shadow-md overflow-hidden transition-all flex flex-col"
+              >
+                <div className="h-28 w-full overflow-hidden bg-gradient-to-br from-sky-100 to-teal-50 relative flex items-center justify-center">
+                  {!failedCards.math ? (
+                    <img
+                      src={mathStudioImg}
+                      alt="Matemáticas Inteligentes"
+                      referrerPolicy="no-referrer"
+                      onError={() => setFailedCards((p) => ({ ...p, math: true }))}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <Calculator className="w-10 h-10 text-sky-600" />
+                  )}
+                </div>
+                <div className="p-4 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-extrabold text-sky-700">
+                    <Calculator className="w-4 h-4" />
+                    <span>Matemáticas Inteligentes</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    10 temas con ejemplos resueltos, figuras visuales y explicación paso a paso.
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {onOpenDailyReflection && (
+              <button
+                type="button"
+                onClick={() => {
+                  audioService.playClick();
+                  onOpenDailyReflection();
+                }}
+                className="group text-left rounded-2xl bg-white border border-slate-200 hover:border-violet-400 shadow-xs hover:shadow-md overflow-hidden transition-all flex flex-col"
+              >
+                <div className="h-28 w-full overflow-hidden bg-gradient-to-br from-violet-100 to-amber-50 relative flex items-center justify-center">
+                  {!failedCards.reflection ? (
+                    <img
+                      src={dailyJournalImg}
+                      alt="Mi Reflexión Diaria"
+                      referrerPolicy="no-referrer"
+                      onError={() => setFailedCards((p) => ({ ...p, reflection: true }))}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <BookHeart className="w-10 h-10 text-violet-600" />
+                  )}
+                </div>
+                <div className="p-4 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-extrabold text-violet-700">
+                    <BookHeart className="w-4 h-4" />
+                    <span>Mi Reflexión Diaria</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Registra cómo te sentiste y qué aprendiste hoy. Privado en tu dispositivo.
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {onOpenProgressDashboard && (
+              <button
+                type="button"
+                onClick={() => {
+                  audioService.playClick();
+                  onOpenProgressDashboard();
+                }}
+                className="group text-left rounded-2xl bg-white border border-slate-200 hover:border-emerald-400 shadow-xs hover:shadow-md overflow-hidden transition-all flex flex-col"
+              >
+                <div className="h-28 w-full overflow-hidden bg-gradient-to-br from-emerald-100 to-sky-50 relative flex items-center justify-center">
+                  {!failedCards.progress ? (
+                    <img
+                      src={progressAtlasImg}
+                      alt="Panel de Progreso Educativo"
+                      referrerPolicy="no-referrer"
+                      onError={() => setFailedCards((p) => ({ ...p, progress: true }))}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <TrendingUp className="w-10 h-10 text-emerald-600" />
+                  )}
+                </div>
+                <div className="p-4 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-extrabold text-emerald-700">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>Panel de Progreso Educativo</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Visualiza tus misiones, avances matemáticos, insignias y temas sugeridos.
+                  </p>
+                </div>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Zones Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

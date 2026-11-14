@@ -56,7 +56,7 @@ export const ModeSelectorModal: React.FC<ModeSelectorModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/75 flex items-center justify-center p-3 sm:p-6">
       <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-teal-700 to-slate-900 text-white px-6 py-5 flex items-center justify-between shrink-0">

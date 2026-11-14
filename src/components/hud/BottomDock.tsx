@@ -5,11 +5,8 @@ import { audioService } from '../../services/audioService';
 import {
   ChevronDown,
   ChevronUp,
-  MapPin,
-  Compass,
   Layers,
-  Sparkles,
-  Volume2
+  Sparkles
 } from 'lucide-react';
 
 interface BottomDockProps {
@@ -59,7 +56,7 @@ export const BottomDock: React.FC<BottomDockProps> = ({
             audioService.playClick();
             setIsCollapsed(!isCollapsed);
           }}
-          className="flex items-center gap-1.5 px-4 py-1 rounded-t-xl bg-slate-900/90 text-white text-[11px] font-semibold border-t border-x border-slate-700/80 shadow-md backdrop-blur-sm hover:bg-slate-800 transition-colors"
+          className="flex items-center gap-1.5 px-4 py-1 rounded-t-xl bg-slate-900/95 text-white text-[11px] font-semibold border-t border-x border-slate-700/90 shadow-md hover:bg-slate-800 transition-colors focus-visible:outline-2 focus-visible:outline-teal-400"
         >
           {isCollapsed ? (
             <>
@@ -76,7 +73,7 @@ export const BottomDock: React.FC<BottomDockProps> = ({
       </div>
 
       {/* Unified Dock Container */}
-      <div className="bg-slate-900/90 text-white rounded-2xl p-3 sm:p-4 border border-slate-700/80 shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
+      <div className="bg-slate-900/95 text-white rounded-2xl p-3 sm:p-4 border border-slate-700/90 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
         {/* Left Zone: Camera Presets & Reset */}
         <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto max-w-full pb-1 md:pb-0">
           <button

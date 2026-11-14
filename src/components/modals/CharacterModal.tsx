@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CHARACTERS } from '../../data/characters';
 import { MISSIONS } from '../../data/missions';
 import { CharacterId } from '../../types/game';
@@ -16,6 +16,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
   onClose,
   onSelectMission
 }) => {
+  const [imgFailed, setImgFailed] = useState(false);
   const char = CHARACTERS[characterId];
   if (!char) return null;
 
@@ -24,7 +25,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/75 flex items-center justify-center p-3 sm:p-6">
       <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
         {/* Header Banner */}
         <div
@@ -34,9 +35,19 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
           }}
         >
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-black text-2xl shadow-md border border-white/20">
-              {char.name[0]}
-            </div>
+            {char.avatarUrl && !imgFailed ? (
+              <img
+                src={char.avatarUrl}
+                alt={`Ilustración de ${char.name}`}
+                referrerPolicy="no-referrer"
+                onError={() => setImgFailed(true)}
+                className="w-16 h-16 rounded-2xl object-cover shadow-md border-2 border-white/40 shrink-0"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-2xl shadow-md border border-white/20 shrink-0">
+                {char.name[0]}
+              </div>
+            )}
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
                 Personaje Permanente

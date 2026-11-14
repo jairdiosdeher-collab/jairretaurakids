@@ -5,10 +5,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { GameMode, ZoneId, CharacterId } from './types/game';
-import { MISSIONS, getMissionById } from './data/missions';
-import { GAME_ZONES } from './data/zones';
-import { CHARACTERS } from './data/characters';
+import {
+  GameMode,
+  ZoneId,
+  CharacterId,
+  DailyReflectionEntry,
+  MathTopicId,
+  MathLevel,
+  MathProgressState
+} from './types/game';
+import { getMissionById } from './data/missions';
+import { INITIAL_MATH_PROGRESS } from './data/mathExercises';
 import { audioService } from './services/audioService';
 
 import { TopBar } from './components/hud/TopBar';
@@ -24,6 +31,9 @@ import { ModeSelectorModal } from './components/modals/ModeSelectorModal';
 import { MissionsListModal } from './components/modals/MissionsListModal';
 import { CharacterModal } from './components/modals/CharacterModal';
 import { ZoneModal } from './components/modals/ZoneModal';
+import { DailyReflectionModal } from './components/modals/DailyReflectionModal';
+import { MathStudioModal } from './components/modals/MathStudioModal';
+import { ProgressDashboardModal } from './components/modals/ProgressDashboardModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { MathHub } from './components/math/MathHub';
 
@@ -33,6 +43,15 @@ export default function App() {
     try {
       const saved = localStorage.getItem('jairrestaura_completed');
       return saved ? JSON.parse(saved) : [1]; // Start with Mission 1 completed for immediate sample progress
+    } catch {
+      return [1];
+    }
+  });
+
+  const [completedActivities, setCompletedActivities] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('jairrestaura_activities');
+      return saved ? JSON.parse(saved) : [1];
     } catch {
       return [1];
     }
@@ -74,6 +93,27 @@ export default function App() {
     }
   });
 
+  const [dailyReflections, setDailyReflections] = useState<DailyReflectionEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem('jairrestaura_daily_reflections');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [mathProgress, setMathProgress] = useState<MathProgressState>(() => {
+    try {
+      const saved = localStorage.getItem('jairrestaura_math_progress');
+      if (saved) {
+        return { ...INITIAL_MATH_PROGRESS, ...JSON.parse(saved) };
+      }
+      return INITIAL_MATH_PROGRESS;
+    } catch {
+      return INITIAL_MATH_PROGRESS;
+    }
+  });
+
   const [currentMode, setCurrentMode] = useState<GameMode>(() => {
     try {
       const saved = localStorage.getItem('jairrestaura_mode') as GameMode;
@@ -84,6 +124,9 @@ export default function App() {
   });
 
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [narrationEnabled, setNarrationEnabled] = useState<boolean>(true);
+  const [volume, setVolume] = useState<number>(0.8);
+  const [speechRate, setSpeechRate] = useState<number>(0.95);
   const [viewMode, setViewMode] = useState<'3d' | 'illustrated_map'>('3d');
   const [isMathHubOpen, setIsMathHubOpen] = useState(false);
 
@@ -99,23 +142,92 @@ export default function App() {
   const [isMissionsListOpen, setIsMissionsListOpen] = useState<boolean>(false);
   const [isZoneModalOpen, setIsZoneModalOpen] = useState<boolean>(false);
 
+  const [isDailyReflectionOpen, setIsDailyReflectionOpen] = useState<boolean>(false);
+  const [isMathStudioOpen, setIsMathStudioOpen] = useState<boolean>(false);
+  const [mathInitialTopic, setMathInitialTopic] = useState<MathTopicId>('sumas');
+  const [isProgressDashboardOpen, setIsProgressDashboardOpen] = useState<boolean>(false);
+
   // Sync state to LocalStorage
   useEffect(() => {
     try {
       localStorage.setItem('jairrestaura_completed', JSON.stringify(completedMissions));
+      localStorage.setItem('jairrestaura_activities', JSON.stringify(completedActivities));
       localStorage.setItem('jairrestaura_badges', JSON.stringify(earnedBadges));
       localStorage.setItem('jairrestaura_reflections', JSON.stringify(reflections));
+      localStorage.setItem('jairrestaura_daily_reflections', JSON.stringify(dailyReflections));
+      localStorage.setItem('jairrestaura_math_progress', JSON.stringify(mathProgress));
       localStorage.setItem('jairrestaura_mode', currentMode);
     } catch {
       // localStorage unavailable or restricted
     }
-  }, [completedMissions, earnedBadges, reflections, currentMode]);
+  }, [
+    completedMissions,
+    completedActivities,
+    earnedBadges,
+    reflections,
+    dailyReflections,
+    mathProgress,
+    currentMode
+  ]);
+
+  // Close open modals with Escape key for accessibility
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      audioService.stopSpeaking();
+
+      if (isMathHubOpen) setIsMathHubOpen(false);
+      else if (isDailyReflectionOpen) setIsDailyReflectionOpen(false);
+      else if (isMathStudioOpen) setIsMathStudioOpen(false);
+      else if (isProgressDashboardOpen) setIsProgressDashboardOpen(false);
+      else if (isBadgesModalOpen) setIsBadgesModalOpen(false);
+      else if (isSkillsBookModalOpen) setIsSkillsBookModalOpen(false);
+      else if (isGuideModalOpen) setIsGuideModalOpen(false);
+      else if (isModeSelectorOpen) setIsModeSelectorOpen(false);
+      else if (isMissionsListOpen) setIsMissionsListOpen(false);
+      else if (isZoneModalOpen) setIsZoneModalOpen(false);
+      else if (activeCharacterId) setActiveCharacterId(null);
+      else if (activeMissionId) setActiveMissionId(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    isMathHubOpen,
+    isDailyReflectionOpen,
+    isMathStudioOpen,
+    isProgressDashboardOpen,
+    isBadgesModalOpen,
+    isSkillsBookModalOpen,
+    isGuideModalOpen,
+    isModeSelectorOpen,
+    isMissionsListOpen,
+    isZoneModalOpen,
+    activeCharacterId,
+    activeMissionId
+  ]);
 
   const handleToggleSound = () => {
     const next = !soundEnabled;
     setSoundEnabled(next);
     audioService.setSoundEnabled(next);
-    audioService.setNarrationEnabled(next);
+    audioService.setNarrationEnabled(next && narrationEnabled);
+  };
+
+  const handleToggleNarration = () => {
+    const next = !narrationEnabled;
+    setNarrationEnabled(next);
+    audioService.setNarrationEnabled(next && soundEnabled);
+  };
+
+  const handleChangeVolume = (nextVol: number) => {
+    setVolume(nextVol);
+    audioService.setVolume(nextVol);
+  };
+
+  const handleChangeSpeechRate = (nextRate: number) => {
+    setSpeechRate(nextRate);
+    audioService.setSpeechRate(nextRate);
   };
 
   const handleSelectZone = (zoneId: ZoneId | null) => {
@@ -135,12 +247,20 @@ export default function App() {
     setActiveCharacterId(null);
     setIsBadgesModalOpen(false);
     setIsSkillsBookModalOpen(false);
+    setIsProgressDashboardOpen(false);
     setActiveMissionId(missionId);
+  };
+
+  const handlePracticeCompleted = (missionId: number) => {
+    setCompletedActivities((prev) => (prev.includes(missionId) ? prev : [...prev, missionId]));
   };
 
   const handleCompleteMission = (missionId: number, badgeId: string, reflectionNote: string) => {
     if (!completedMissions.includes(missionId)) {
       setCompletedMissions((prev) => [...prev, missionId]);
+    }
+    if (!completedActivities.includes(missionId)) {
+      setCompletedActivities((prev) => [...prev, missionId]);
     }
     if (!earnedBadges.includes(badgeId)) {
       setEarnedBadges((prev) => [...prev, badgeId]);
@@ -160,6 +280,54 @@ export default function App() {
     });
   };
 
+  const handleSaveDailyReflection = (entry: DailyReflectionEntry) => {
+    setDailyReflections((prev) => {
+      const exists = prev.some((item) => item.id === entry.id);
+      if (exists) {
+        return prev.map((item) => (item.id === entry.id ? entry : item));
+      }
+      return [entry, ...prev];
+    });
+  };
+
+  const handleDeleteDailyReflection = (id: string) => {
+    setDailyReflections((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleRecordMathAttempt = (
+    topicId: MathTopicId,
+    exerciseId: string,
+    isCorrect: boolean,
+    level: MathLevel
+  ) => {
+    setMathProgress((prev) => {
+      const current = prev[topicId] || INITIAL_MATH_PROGRESS[topicId];
+      const nextCompletedIds =
+        isCorrect && !current.completedIds.includes(exerciseId)
+          ? [...current.completedIds, exerciseId]
+          : current.completedIds;
+      const unlockedCandidate = isCorrect ? Math.min(3, level + 1) : current.unlockedLevel;
+      const nextUnlockedLevel = Math.max(current.unlockedLevel, unlockedCandidate) as MathLevel;
+
+      return {
+        ...prev,
+        [topicId]: {
+          attempts: current.attempts + 1,
+          correct: current.correct + (isCorrect ? 1 : 0),
+          unlockedLevel: nextUnlockedLevel,
+          completedIds: nextCompletedIds,
+          lastPracticedAt: new Date().toISOString()
+        }
+      };
+    });
+  };
+
+  const handleOpenMathStudio = (topicId: MathTopicId = 'sumas') => {
+    setMathInitialTopic(topicId);
+    setIsProgressDashboardOpen(false);
+    setIsMathStudioOpen(true);
+  };
+
   const activeMission = activeMissionId ? getMissionById(activeMissionId) : null;
 
   return (
@@ -172,13 +340,29 @@ export default function App() {
         onOpenSkillsBook={() => setIsSkillsBookModalOpen(true)}
         onOpenGuide={() => setIsGuideModalOpen(true)}
         onOpenMissionsList={() => setIsMissionsListOpen(true)}
+        onOpenMathStudio={() => handleOpenMathStudio(mathInitialTopic)}
+        onOpenDailyReflection={() => setIsDailyReflectionOpen(true)}
+        onOpenProgressDashboard={() => setIsProgressDashboardOpen(true)}
         soundEnabled={soundEnabled}
         onToggleSound={handleToggleSound}
+        narrationEnabled={narrationEnabled}
+        onToggleNarration={handleToggleNarration}
+        volume={volume}
+        onChangeVolume={handleChangeVolume}
+        speechRate={speechRate}
+        onChangeSpeechRate={handleChangeSpeechRate}
         viewMode={viewMode}
         onToggleViewMode={() => setViewMode(viewMode === '3d' ? 'illustrated_map' : '3d')}
       />
 
-      <button onClick={() => setIsMathHubOpen(true)} className="fixed right-3 top-20 z-40 rounded-full border border-white/30 bg-indigo-700 px-4 py-3 text-sm font-extrabold text-white shadow-xl transition hover:scale-105 hover:bg-indigo-800 sm:right-6" aria-label="Abrir JAIR MATH KIDS">🧮 JAIR MATH KIDS</button>
+      <button
+        type="button"
+        onClick={() => setIsMathHubOpen(true)}
+        className="fixed right-3 top-20 z-40 rounded-full border border-white/30 bg-indigo-700 px-4 py-3 text-sm font-extrabold text-white shadow-xl transition hover:scale-105 hover:bg-indigo-800 sm:right-6"
+        aria-label="Abrir JAIR MATH KIDS"
+      >
+        🧮 JAIR MATH KIDS
+      </button>
 
       {/* 2. Main Stage (3D World Canvas or 2D Illustrated Map) */}
       <main className="relative flex-1 w-full h-full overflow-hidden">
@@ -201,6 +385,9 @@ export default function App() {
             activeZoneId={activeZoneId}
             onSelectZone={handleSelectZone}
             onOpenMission={handleOpenMission}
+            onOpenMathStudio={() => handleOpenMathStudio(mathInitialTopic)}
+            onOpenDailyReflection={() => setIsDailyReflectionOpen(true)}
+            onOpenProgressDashboard={() => setIsProgressDashboardOpen(true)}
             completedMissions={completedMissions}
           />
         )}
@@ -224,6 +411,7 @@ export default function App() {
           mission={activeMission}
           currentMode={currentMode}
           onCompleteMission={handleCompleteMission}
+          onPracticeCompleted={handlePracticeCompleted}
           onExit={() => setActiveMissionId(null)}
         />
       )}
@@ -231,7 +419,46 @@ export default function App() {
       {/* Módulo JAIR MATH KIDS */}
       {isMathHubOpen && <MathHub onClose={() => setIsMathHubOpen(false)} />}
 
-      {/* 5. Modals */}
+      {/* 5. Educational Modules & Modals */}
+      {isMathStudioOpen && (
+        <MathStudioModal
+          mathProgress={mathProgress}
+          initialTopicId={mathInitialTopic}
+          onRecordAttempt={handleRecordMathAttempt}
+          onClose={() => setIsMathStudioOpen(false)}
+        />
+      )}
+
+      {isDailyReflectionOpen && (
+        <DailyReflectionModal
+          entries={dailyReflections}
+          onSaveEntry={handleSaveDailyReflection}
+          onDeleteEntry={handleDeleteDailyReflection}
+          onClose={() => setIsDailyReflectionOpen(false)}
+        />
+      )}
+
+      {isProgressDashboardOpen && (
+        <ProgressDashboardModal
+          completedMissions={completedMissions}
+          completedActivities={completedActivities}
+          earnedBadges={earnedBadges}
+          dailyReflections={dailyReflections}
+          mathProgress={mathProgress}
+          onOpenMission={handleOpenMission}
+          onOpenMathTopic={handleOpenMathStudio}
+          onOpenDailyReflection={() => {
+            setIsProgressDashboardOpen(false);
+            setIsDailyReflectionOpen(true);
+          }}
+          onOpenBadges={() => {
+            setIsProgressDashboardOpen(false);
+            setIsBadgesModalOpen(true);
+          }}
+          onClose={() => setIsProgressDashboardOpen(false)}
+        />
+      )}
+
       {isBadgesModalOpen && (
         <BadgesModal
           earnedBadges={earnedBadges}
